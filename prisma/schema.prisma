@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  VENUE_ADMIN
+  SUPER_ADMIN
+}
+
+enum SportType {
+  FUTSAL
+  BADMINTON
+  BASKET
+  TENNIS
+  MINI_SOCCER
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  MOCK
+  MIDTRANS
+  XENDIT
+}
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  phone        String?
+  passwordHash String
+  role         UserRole   @default(CUSTOMER)
+  bookings     Booking[]
+  venues       Venue[]    @relation("VenueAdmins")
+  reviews      Review[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Venue {
+  id              String            @id @default(cuid())
+  name            String
+  slug            String            @unique
+  description     String
+  city            String
+  address         String
+  latitude        Decimal?          @db.Decimal(10, 7)
+  longitude       Decimal?          @db.Decimal(10, 7)
+  facilities      String[]
+  rules           String[]
+  photos          String[]
+  opensAt         String
+  closesAt        String
+  cancellationPolicy String
+  admins          User[]            @relation("VenueAdmins")
+  courts          Court[]
+  reviews         Review[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model Court {
+  id             String            @id @default(cuid())
+  venueId        String
+  venue          Venue             @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  name           String
+  sportType      SportType
+  surface        String
+  pricePerHour   Int
+  isActive       Boolean           @default(true)
+  schedules      CourtSchedule[]
+  bookings       Booking[]
+  unavailableSlots UnavailableSlot[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([venueId, sportType])
+}
+
+model CourtSchedule {
+  id          String   @id @default(cuid())
+  courtId     String
+  court       Court    @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  dayOfWeek   Int
+  opensAt     String
+  closesAt    String
+  priceOverride Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([courtId, dayOfWeek])
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  bookingCode   String        @unique
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  courtId       String
+  court         Court         @relation(fields: [courtId], references: [id])
+  startsAt      DateTime
+  endsAt        DateTime
+  durationHours Int
+  subtotal      Int
+  serviceFee    Int
+  total         Int
+  status        BookingStatus @default(PENDING_PAYMENT)
+  lockedUntil   DateTime?
+  cancelledAt   DateTime?
+  cancelReason  String?
+  payment       Payment?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([courtId, startsAt, endsAt])
+}
+
+model Payment {
+  id                  String          @id @default(cuid())
+  bookingId           String          @unique
+  booking             Booking         @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  provider            PaymentProvider
+  providerTransactionId String?
+  invoiceUrl          String?
+  grossAmount         Int
+  status              PaymentStatus   @default(PENDING)
+  rawResponse         Json?
+  paidAt              DateTime?
+  expiresAt           DateTime?
+  webhooks            PaymentWebhook[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model PaymentWebhook {
+  id           String   @id @default(cuid())
+  paymentId    String?
+  payment      Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  provider     PaymentProvider
+  eventType    String
+  signature    String?
+  payload      Json
+  isVerified   Boolean  @default(false)
+  receivedAt   DateTime @default(now())
+}
+
+model UnavailableSlot {
+  id        String   @id @default(cuid())
+  courtId   String
+  court     Court    @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  startsAt  DateTime
+  endsAt    DateTime
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([courtId, startsAt, endsAt])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  venueId   String
+  venue     Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, venueId])
+}
