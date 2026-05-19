@@ -3,14 +3,15 @@
 import { QRCodeSVG } from "qrcode.react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { formatRupiah } from "@/lib/booking";
+import { authFetch } from "@/lib/auth-client";
+import { formatRupiah } from "@/lib/format";
 
 export default function BookingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    fetch(`/api/bookings/${id}`, { cache: "no-store" }).then((res) => res.json()).then(setData);
+    authFetch(`/api/bookings/${id}`, { cache: "no-store" }).then((res) => res.json()).then(setData);
   }, [id]);
 
   const booking = data?.booking;

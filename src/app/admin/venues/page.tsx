@@ -1,7 +1,10 @@
 import { AdminShell } from "@/components/AdminShell";
-import { venues } from "@/lib/mock-data";
+import { listVenues } from "@/lib/db-data";
 
-export default function AdminVenuesPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminVenuesPage() {
+  const venues = await listVenues();
   return (
     <AdminShell>
       <div className="section-title"><h2>Manajemen Venue</h2><button className="btn">Tambah Venue</button></div>

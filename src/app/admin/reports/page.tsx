@@ -1,5 +1,5 @@
 import { AdminShell } from "@/components/AdminShell";
-import { formatRupiah } from "@/lib/booking";
+import { formatRupiah } from "@/lib/format";
 
 export default function AdminReportsPage() {
   const rows = [

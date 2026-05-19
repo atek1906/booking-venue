@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
-import { formatRupiah } from "@/lib/booking";
+import { authFetch } from "@/lib/auth-client";
+import { formatRupiah } from "@/lib/format";
 
 export default function AdminBookingsPage() {
   const [items, setItems] = useState<any[]>([]);
-  useEffect(() => { fetch("/api/bookings").then((res) => res.json()).then((json) => setItems(json.bookings || [])); }, []);
+  useEffect(() => { authFetch("/api/bookings").then((res) => res.json()).then((json) => setItems(json.bookings || [])); }, []);
   return (
     <AdminShell>
       <div className="section-title"><h2>Manajemen Booking</h2></div>

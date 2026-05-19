@@ -1,8 +1,11 @@
 import { AdminShell } from "@/components/AdminShell";
-import { formatRupiah } from "@/lib/booking";
-import { venues } from "@/lib/mock-data";
+import { formatRupiah } from "@/lib/format";
+import { listVenues } from "@/lib/db-data";
 
-export default function AdminDashboardPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminDashboardPage() {
+  const venues = await listVenues();
   const courts = venues.flatMap((venue) => venue.courts);
   return (
     <AdminShell>

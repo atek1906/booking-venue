@@ -74,5 +74,10 @@ export const unavailableSlots = [
   { courtId: "c_tennis_a", startsAt: "2026-05-17T18:00:00+07:00", endsAt: "2026-05-17T20:00:00+07:00", reason: "Turnamen internal" }
 ];
 
-export const bookings: Booking[] = [];
-export const payments: Payment[] = [];
+const mockStore = globalThis as typeof globalThis & {
+  __courtbookBookings?: Booking[];
+  __courtbookPayments?: Payment[];
+};
+
+export const bookings: Booking[] = mockStore.__courtbookBookings ??= [];
+export const payments: Payment[] = mockStore.__courtbookPayments ??= [];

@@ -1,25 +1,24 @@
 import { VenueCard } from "@/components/VenueCard";
-import { sportLabels, venues } from "@/lib/mock-data";
+import { listVenues } from "@/lib/db-data";
+import { sportLabels } from "@/lib/mock-data";
+
+export const dynamic = "force-dynamic";
 
 export default async function VenuesPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const params = await searchParams;
   const sport = params.sport;
   const location = params.location?.toLowerCase();
   const maxPrice = Number(params.maxPrice || 0);
-  const filtered = venues.filter((venue) => {
-    const sportMatch = !sport || venue.courts.some((court) => court.sportType === sport);
-    const locationMatch = !location || `${venue.city} ${venue.location}`.toLowerCase().includes(location);
-    const priceMatch = !maxPrice || venue.courts.some((court) => court.pricePerHour <= maxPrice);
-    return sportMatch && locationMatch && priceMatch;
-  });
+  const filtered = await listVenues({ sport, location, maxPrice });
 
   return (
-    <main className="section">
+    <main className="section compact">
       <div className="shell stack">
         <div className="section-title">
           <div>
-            <h2>Daftar Venue</h2>
-            <p className="muted">Filter berdasarkan olahraga, lokasi, tanggal, harga, dan ketersediaan.</p>
+            <div className="eyebrow">Venue tersedia</div>
+            <h1>Daftar venue</h1>
+            <p className="muted">{filtered.length} venue cocok untuk filter saat ini. Persempit dengan olahraga, lokasi, atau batas harga.</p>
           </div>
         </div>
         <form className="search-panel" action="/venues">
@@ -36,13 +35,20 @@ export default async function VenuesPage({ searchParams }: { searchParams: Promi
           </div>
           <div className="field">
             <label>Harga maksimal</label>
-            <input name="maxPrice" defaultValue={params.maxPrice || ""} placeholder="300000" />
+            <input name="maxPrice" defaultValue={params.maxPrice || ""} inputMode="numeric" placeholder="300000" />
           </div>
           <button className="btn">Terapkan</button>
         </form>
-        <div className="grid">
-          {filtered.map((venue) => <VenueCard key={venue.id} venue={venue} />)}
-        </div>
+        {filtered.length ? (
+          <div className="grid">
+            {filtered.map((venue) => <VenueCard key={venue.id} venue={venue} />)}
+          </div>
+        ) : (
+          <div className="panel stack">
+            <h2 style={{ margin: 0 }}>Belum ada venue yang cocok</h2>
+            <p className="muted" style={{ margin: 0 }}>Coba kosongkan lokasi atau naikkan harga maksimal.</p>
+          </div>
+        )}
       </div>
     </main>
   );

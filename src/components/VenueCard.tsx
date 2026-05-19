@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { MapPin, Star } from "lucide-react";
-import { formatRupiah } from "@/lib/booking";
+import { ArrowRight, Clock, MapPin, Star } from "lucide-react";
+import { formatRupiah } from "@/lib/format";
 import { sportLabels } from "@/lib/mock-data";
 import type { Venue } from "@/lib/types";
 
@@ -13,7 +13,7 @@ export function VenueCard({ venue }: { venue: Venue }) {
       <div className="card-body stack">
         <div>
           <h3 style={{ margin: "0 0 8px" }}>{venue.name}</h3>
-          <div className="muted" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div className="card-meta">
             <MapPin size={16} /> {venue.location}
           </div>
         </div>
@@ -23,10 +23,14 @@ export function VenueCard({ venue }: { venue: Venue }) {
           ))}
         </div>
         <div className="row">
-          <span className="muted"><Star size={15} /> {venue.rating}</span>
-          <strong>Mulai {formatRupiah(minPrice)}/jam</strong>
+          <span className="inline"><Star size={15} /> {venue.rating}</span>
+          <span className="inline"><Clock size={15} /> {venue.opensAt}-{venue.closesAt}</span>
         </div>
-        <Link className="btn" href={`/venues/${venue.slug}`}>Lihat Detail</Link>
+        <div className="row">
+          <span>Mulai</span>
+          <strong>{formatRupiah(minPrice)}/jam</strong>
+        </div>
+        <Link className="btn full" href={`/venues/${venue.slug}`}>Lihat Detail <ArrowRight size={17} /></Link>
       </div>
     </article>
   );

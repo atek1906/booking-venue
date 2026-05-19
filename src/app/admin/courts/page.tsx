@@ -1,8 +1,12 @@
 import { AdminShell } from "@/components/AdminShell";
-import { formatRupiah } from "@/lib/booking";
-import { sportLabels, venues } from "@/lib/mock-data";
+import { formatRupiah } from "@/lib/format";
+import { listVenues } from "@/lib/db-data";
+import { sportLabels } from "@/lib/mock-data";
 
-export default function AdminCourtsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminCourtsPage() {
+  const venues = await listVenues();
   const courts = venues.flatMap((venue) => venue.courts.map((court) => ({ ...court, venueName: venue.name })));
   return (
     <AdminShell>

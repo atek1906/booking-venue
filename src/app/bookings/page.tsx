@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { formatRupiah } from "@/lib/booking";
+import { authFetch } from "@/lib/auth-client";
+import { formatRupiah } from "@/lib/format";
 
 export default function BookingHistoryPage() {
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch("/api/bookings", { cache: "no-store" }).then((res) => res.json()).then((json) => setItems(json.bookings || []));
+    authFetch("/api/bookings", { cache: "no-store" }).then((res) => res.json()).then((json) => setItems(json.bookings || []));
   }, []);
 
   return (

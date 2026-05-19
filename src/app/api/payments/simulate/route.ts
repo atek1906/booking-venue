@@ -1,19 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { bookings, payments } from "@/lib/mock-data";
-import { getBookingView } from "@/lib/booking";
-import type { PaymentStatus } from "@/lib/types";
+import { BookingStatus, PaymentStatus } from "@prisma/client";
+import { getAuthUser } from "@/lib/auth-server";
+import { getBookingForUser } from "@/lib/db-data";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
-  const { bookingId, status } = await request.json() as { bookingId: string; status: PaymentStatus };
-  const booking = bookings.find((item) => item.id === bookingId);
-  const payment = payments.find((item) => item.bookingId === bookingId);
-  if (!booking || !payment) return NextResponse.json({ message: "Booking/payment tidak ditemukan" }, { status: 404 });
+  try {
+    const user = await getAuthUser(request);
+    const { bookingId, status } = await request.json() as { bookingId: string; status: "paid" | "failed" | "expired" };
+    const payment = await prisma.payment.findFirst({ where: { bookingId, booking: { userId: user.id } } });
+    if (!payment) return NextResponse.json({ message: "Booking/payment tidak ditemukan" }, { status: 404 });
 
-  payment.status = status;
-  if (status === "paid") booking.status = "confirmed";
-  if (status === "failed") booking.status = "expired";
-  if (status === "expired") booking.status = "expired";
-  if (status === "refunded") booking.status = "cancelled";
+    const paymentStatus = status.toUpperCase() as PaymentStatus;
+    const bookingStatus = status === "paid" ? BookingStatus.CONFIRMED : BookingStatus.EXPIRED;
 
-  return NextResponse.json({ payment, booking: getBookingView(booking) });
+    await prisma.$transaction([
+      prisma.payment.update({ where: { id: payment.id }, data: { status: paymentStatus, paidAt: status === "paid" ? new Date() : null } }),
+      prisma.booking.update({ where: { id: bookingId }, data: { status: bookingStatus } })
+    ]);
+
+    const booking = await getBookingForUser(bookingId, user);
+    return NextResponse.json({ booking });
+  } catch (error) {
+    return NextResponse.json({ message: error instanceof Error ? error.message : "Gagal simulasi pembayaran" }, { status: 400 });
+  }
 }
