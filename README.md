@@ -6,9 +6,11 @@ CourtBook adalah aplikasi web booking lapangan olahraga untuk mencari venue, mem
 
 - Frontend: Next.js App Router, React, TypeScript
 - Backend: Next.js API routes
-- Database schema: PostgreSQL + Prisma
-- Payment gateway: Midtrans-ready, dengan mock payment flow sebagai default
+- Database schema: Supabase PostgreSQL + Prisma
+- Auth: Supabase Auth
+- Payment gateway: Midtrans Snap + QRIS, dengan mock payment flow sebagai fallback non-production
 - QR booking: `qrcode.react`
+- Quality scan: SonarCloud
 
 ## Struktur Project
 
@@ -53,13 +55,36 @@ npm install
 cp .env.example .env
 ```
 
-3. Untuk mode demo tanpa database/payment key, jalankan langsung:
+3. Isi `.env.local`:
+
+```text
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+DATABASE_URL=
+DIRECT_URL=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+PAYMENT_GATEWAY=midtrans
+MIDTRANS_IS_PRODUCTION=false
+MIDTRANS_SERVER_KEY=
+NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=
+SONAR_TOKEN=
+```
+
+4. Generate Prisma client dan seed Supabase:
+
+```bash
+npm run prisma:generate
+npm run prisma:deploy
+npm run prisma:seed
+```
+
+5. Jalankan app:
 
 ```bash
 npm run dev
 ```
 
-4. Buka:
+6. Buka:
 
 ```text
 http://localhost:3000
@@ -75,33 +100,25 @@ npm run prisma:migrate -- --name init
 npm run prisma:seed
 ```
 
-Mode UI/API saat ini menggunakan mock store agar payment flow bisa dicoba tanpa database. Schema Prisma sudah siap menjadi sumber data permanen untuk tahap berikutnya.
+Runtime API menggunakan Prisma ke Supabase Postgres. Pastikan Supabase Auth sudah mengizinkan email/password login dan user admin dibuat melalui seed/Supabase dashboard, bukan melalui form customer.
 
 ## Payment Gateway
 
-Default `.env` memakai:
-
-```text
-PAYMENT_GATEWAY=mock
-```
-
-Flow mock:
-
-1. Pilih venue dan lapangan.
-2. Pilih tanggal, jam mulai, dan durasi.
-3. Klik `Bayar Sekarang`.
-4. Backend membuat booking pending dan payment pending.
-5. Halaman status menampilkan tombol `Simulasi Paid`, `Simulasi Expired`, dan `Simulasi Failed`.
-6. Jika paid, booking berubah menjadi confirmed dan QR booking aktif.
-
-Untuk Midtrans, isi:
+Mode production/staging memakai:
 
 ```text
 PAYMENT_GATEWAY=midtrans
-MIDTRANS_SERVER_KEY=
-MIDTRANS_CLIENT_KEY=
-MIDTRANS_IS_PRODUCTION=false
 ```
+
+Flow Midtrans:
+
+1. Pilih venue dan lapangan.
+2. Pilih tanggal, jam mulai, dan durasi.
+3. Pilih metode `Midtrans Snap` atau `QRIS in-app`.
+4. Backend membuat booking pending dan payment pending.
+5. Snap menampilkan link pembayaran Midtrans; QRIS menampilkan QR pembayaran.
+6. Webhook Midtrans mengubah status menjadi paid/confirmed.
+7. QR bukti booking aktif setelah pembayaran berhasil.
 
 Endpoint webhook:
 
@@ -110,3 +127,26 @@ POST /api/payments/webhook
 ```
 
 Backend memverifikasi signature Midtrans sebelum mengubah payment/booking status. Jangan mengubah status pembayaran dari frontend.
+
+## SonarCloud
+
+Isi `sonar.organization` dan `sonar.projectKey` di `sonar-project.properties`, lalu jalankan:
+
+```bash
+npm run sonar
+```
+
+Pastikan `SONAR_TOKEN` tersedia di environment lokal dan GitHub Actions secrets.
+
+## Deploy Vercel
+
+1. Tambahkan semua env dari `.env.example` ke Vercel Project Settings.
+2. Gunakan Supabase pooled connection untuk `DATABASE_URL` dan direct connection untuk `DIRECT_URL`.
+3. Jalankan migration dan seed dari lokal/CI sebelum deploy production.
+4. Set Midtrans webhook ke:
+
+```text
+https://<domain-vercel>/api/payments/webhook
+```
+
+5. Pastikan SonarCloud quality gate lulus sebelum promote production.
