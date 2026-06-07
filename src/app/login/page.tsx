@@ -16,11 +16,31 @@ function LoginContent() {
   const [password, setPassword] = useState("password");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const demoAuthEnabled = process.env.NEXT_PUBLIC_DEMO_AUTH_ENABLED === "true";
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setMessage("");
+
+    if (demoAuthEnabled) {
+      const response = await fetch("/api/auth/demo-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ email, password })
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setMessage(json.message || "Login demo gagal.");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(false);
+      router.replace(returnTo);
+      return;
+    }
 
     const supabase = getBrowserSupabase();
     if (!supabase) {
@@ -50,7 +70,11 @@ function LoginContent() {
             <h1 style={{ margin: 0 }}>Login</h1>
             <p className="muted">Masuk sebagai customer untuk mengunci slot dan melanjutkan pembayaran.</p>
           </div>
-          {!isSupabaseConfigured() && <p className="notice muted">Supabase belum dikonfigurasi untuk environment ini.</p>}
+          {demoAuthEnabled ? (
+            <p className="notice muted">Mode demo lokal aktif. Gunakan user@courtbook.test dan password untuk mencoba flow booking.</p>
+          ) : !isSupabaseConfigured() && (
+            <p className="notice muted">Supabase belum dikonfigurasi untuk environment ini.</p>
+          )}
           <div className="field">
             <label>Email</label>
             <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />

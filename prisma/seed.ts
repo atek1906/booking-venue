@@ -1,6 +1,22 @@
+import { loadEnvConfig } from "@next/env";
 import { PrismaClient, SportType, UserRole } from "@prisma/client";
 
+loadEnvConfig(process.cwd());
+
 const prisma = new PrismaClient();
+
+function jakartaDate(daysFromToday: number, time: string) {
+  const now = new Date();
+  const jakartaToday = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(now);
+  const base = new Date(`${jakartaToday}T12:00:00+07:00`);
+  base.setUTCDate(base.getUTCDate() + daysFromToday);
+  return new Date(`${base.toISOString().slice(0, 10)}T${time}:00+07:00`);
+}
 
 const venueSeeds = [
   {
@@ -11,7 +27,12 @@ const venueSeeds = [
     address: "Gelora, Jakarta Pusat",
     facilities: ["Parkir", "Ruang ganti", "Shower", "Mushola", "Kantin", "Wi-Fi"],
     rules: ["Check-in maksimal 15 menit sebelum jadwal", "Gunakan sepatu olahraga sesuai permukaan", "Refund mengikuti kebijakan venue"],
-    photos: ["https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=1200&q=80"],
+    photos: [
+      "https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1547347298-4074fc3086f0?auto=format&fit=crop&w=1200&q=80"
+    ],
     opensAt: "06:00",
     closesAt: "23:00",
     cancellationPolicy: "Refund 75% untuk pembatalan minimal 24 jam sebelum jadwal.",
@@ -29,7 +50,12 @@ const venueSeeds = [
     address: "BSD City",
     facilities: ["Lounge", "Pro shop", "Coach on request", "Parkir", "Locker"],
     rules: ["Dilarang membawa makanan ke area court", "Reschedule maksimal H-1 jika slot tersedia"],
-    photos: ["https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=1200&q=80"],
+    photos: [
+      "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1599474924187-334a4ae5bd3c?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1613918108466-292b78a8ef95?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1530915365347-e35b749a0381?auto=format&fit=crop&w=1200&q=80"
+    ],
     opensAt: "07:00",
     closesAt: "22:00",
     cancellationPolicy: "Reschedule gratis sampai 24 jam sebelum jadwal, refund diproses manual.",
@@ -46,7 +72,12 @@ const venueSeeds = [
     address: "Summarecon Bekasi",
     facilities: ["Tribun", "Lampu malam", "Ruang bilas", "Parkir bus kecil"],
     rules: ["Maksimal 16 pemain per sesi", "Dilarang menggunakan sepatu pull besi"],
-    photos: ["https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80"],
+    photos: [
+      "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=1200&q=80"
+    ],
     opensAt: "08:00",
     closesAt: "24:00",
     cancellationPolicy: "Pembatalan H-2 mendapat refund 80%, setelah itu tidak dapat refund.",
@@ -112,15 +143,57 @@ async function main() {
       }
     });
 
-    await prisma.court.deleteMany({ where: { venueId: venue.id } });
-    await prisma.court.createMany({
-      data: item.courts.map((court) => ({ ...court, venueId: venue.id }))
-    });
+    for (const court of item.courts) {
+      const existingCourt = await prisma.court.findFirst({
+        where: { venueId: venue.id, name: court.name }
+      });
+      if (existingCourt) {
+        await prisma.court.update({
+          where: { id: existingCourt.id },
+          data: court
+        });
+      } else {
+        await prisma.court.create({
+          data: { ...court, venueId: venue.id }
+        });
+      }
+    }
 
     await prisma.review.upsert({
       where: { userId_venueId: { userId: customer.id, venueId: venue.id } },
       update: {},
       create: { userId: customer.id, venueId: venue.id, rating: 5, comment: "Booking cepat dan lapangannya bersih." }
+    });
+  }
+
+  const futsalA = await prisma.court.findFirst({ where: { name: "Futsal A", venue: { slug: "arena-senayan" } } });
+  const tennisA = await prisma.court.findFirst({ where: { name: "Tennis A", venue: { slug: "rally-house-bsd" } } });
+
+  await prisma.unavailableSlot.deleteMany({
+    where: {
+      reason: { in: ["Maintenance demo", "Turnamen internal demo"] }
+    }
+  });
+
+  if (futsalA) {
+    await prisma.unavailableSlot.create({
+      data: {
+        courtId: futsalA.id,
+        startsAt: jakartaDate(1, "18:00"),
+        endsAt: jakartaDate(1, "20:00"),
+        reason: "Maintenance demo"
+      }
+    });
+  }
+
+  if (tennisA) {
+    await prisma.unavailableSlot.create({
+      data: {
+        courtId: tennisA.id,
+        startsAt: jakartaDate(2, "19:00"),
+        endsAt: jakartaDate(2, "21:00"),
+        reason: "Turnamen internal demo"
+      }
     });
   }
 }

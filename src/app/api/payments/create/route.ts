@@ -1,36 +1,62 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PaymentProvider, type Prisma } from "@prisma/client";
+import { PaymentProvider, PaymentStatus, type Prisma } from "@prisma/client";
+import { z } from "zod";
 import { getAuthUser } from "@/lib/auth-server";
 import { createStoredPayment, getBookingForUser } from "@/lib/db-data";
-import { createMidtransQrisTransaction, createMidtransSnapTransaction, extractQrisUrl } from "@/lib/payment";
+import { errorDetails, errorMessage, getRequestContext, logger } from "@/lib/logger";
+import { createMidtransSnapTransaction, PaymentGatewayError } from "@/lib/payment";
 import { prisma } from "@/lib/prisma";
 
+const createPaymentSchema = z.object({
+  bookingId: z.string().min(1),
+  method: z.literal("snap").optional()
+});
+
+function getAppUrl(request: NextRequest) {
+  return (process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin).replace(/\/$/, "");
+}
+
 export async function POST(request: NextRequest) {
+  const context = getRequestContext(request, "api.payments.create");
   try {
     const user = await getAuthUser(request);
-    const { bookingId, method = "snap" } = await request.json() as { bookingId: string; method?: "snap" | "qris" | "mock" };
+    const payload = createPaymentSchema.safeParse(await request.json().catch(() => null));
+    if (!payload.success) {
+      logger.warn("payment_create.invalid_payload", context);
+      return NextResponse.json({ message: "Request pembayaran tidak valid" }, { status: 400, headers: { "x-request-id": context.requestId } });
+    }
+
+    const { bookingId } = payload.data;
     const booking = await prisma.booking.findFirst({
       where: { id: bookingId, userId: user.id },
-      include: { user: true }
+      include: { user: true, payment: true }
     });
-    if (!booking) return NextResponse.json({ message: "Booking tidak ditemukan" }, { status: 404 });
-    if (booking.status !== "PENDING_PAYMENT") return NextResponse.json({ message: "Booking tidak bisa dibayar" }, { status: 400 });
+    if (!booking) return NextResponse.json({ message: "Booking tidak ditemukan" }, { status: 404, headers: { "x-request-id": context.requestId } });
+    if (booking.status !== "PENDING_PAYMENT") {
+      logger.warn("payment_create.booking_not_payable", { ...context, bookingId, bookingStatus: booking.status });
+      return NextResponse.json({ message: "Booking tidak bisa dibayar" }, { status: 400, headers: { "x-request-id": context.requestId } });
+    }
+
+    if (booking.payment?.status === PaymentStatus.PENDING && booking.payment.invoiceUrl) {
+      const view = await getBookingForUser(booking.id, user);
+      logger.info("payment_create.reused_pending_payment", {
+        ...context,
+        bookingId: booking.id,
+        paymentId: booking.payment.id,
+        provider: booking.payment.provider
+      });
+      return NextResponse.json({ payment: booking.payment, booking: view }, { headers: { "x-request-id": context.requestId } });
+    }
 
     const gateway = process.env.PAYMENT_GATEWAY === "midtrans" ? "midtrans" : "mock";
     let payment;
 
-    if (gateway === "midtrans" && method === "qris") {
-      const response = await createMidtransQrisTransaction({ booking, user: booking.user });
-      payment = await createStoredPayment({
+    if (gateway === "midtrans") {
+      const response = await createMidtransSnapTransaction({
         booking,
-        provider: PaymentProvider.MIDTRANS,
-        method,
-        providerTransactionId: response.transaction_id || response.order_id,
-        invoiceUrl: extractQrisUrl(response),
-        rawResponse: response as Prisma.InputJsonValue
+        user: booking.user,
+        finishUrl: `${getAppUrl(request)}/payment/status?bookingId=${booking.id}`
       });
-    } else if (gateway === "midtrans") {
-      const response = await createMidtransSnapTransaction({ booking, user: booking.user });
       payment = await createStoredPayment({
         booking,
         provider: PaymentProvider.MIDTRANS,
@@ -50,8 +76,22 @@ export async function POST(request: NextRequest) {
     }
 
     const view = await getBookingForUser(booking.id, user);
-    return NextResponse.json({ payment, booking: view });
+    logger.info("payment_create.created", {
+      ...context,
+      bookingId: booking.id,
+      paymentId: payment.id,
+      provider: payment.provider,
+      method: gateway === "midtrans" ? "snap" : "mock",
+      grossAmount: payment.grossAmount
+    });
+    return NextResponse.json({ payment, booking: view }, { headers: { "x-request-id": context.requestId } });
   } catch (error) {
-    return NextResponse.json({ message: error instanceof Error ? error.message : "Gagal membuat transaksi pembayaran" }, { status: 500 });
+    const status = error instanceof PaymentGatewayError ? 502 : 500;
+    logger.error("payment_create.failed", {
+      ...context,
+      status,
+      error: errorDetails(error)
+    });
+    return NextResponse.json({ message: errorMessage(error, "Gagal membuat transaksi pembayaran") }, { status, headers: { "x-request-id": context.requestId } });
   }
 }
