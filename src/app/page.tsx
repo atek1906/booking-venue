@@ -31,53 +31,48 @@ export default async function HomePage() {
 
   return (
     <main>
-      <section className="hero">
-        <div className="shell hero-grid">
-          <div>
-            <div className="eyebrow"><Sparkles size={15} /> Booking venue olahraga</div>
+      <section className="home-hero">
+        <img className="home-hero-bg" src="https://images.unsplash.com/photo-1556056504-5c7696c4c28d?auto=format&fit=crop&w=1800&q=82" alt="Pemain olahraga di lapangan" />
+        <div className="home-hero-shade" />
+        <div className="shell home-hero-content">
+          <div className="home-copy">
+            <div className="eyebrow light"><Sparkles size={15} /> Booking venue olahraga</div>
             <h1>CourtBook</h1>
-            <p>Temukan lapangan terdekat, bandingkan venue, pilih slot kosong, lalu bayar online tanpa pindah-pindah chat.</p>
+            <p>Temukan lapangan, cek slot real-time, kunci jadwal, lalu bayar aman lewat Midtrans dalam satu flow yang singkat.</p>
             <div className="hero-actions">
               <Link className="btn" href="/venues"><Search size={18} /> Cari Lapangan</Link>
-              <Link className="btn secondary" href="/bookings">Cek Booking <ArrowRight size={18} /></Link>
-            </div>
-            <form className="search-panel" action="/venues">
-              <div className="field">
-                <label>Olahraga</label>
-                <select name="sport" defaultValue="">
-                  <option value="">Semua olahraga</option>
-                  <option value="FUTSAL">Futsal</option>
-                  <option value="BADMINTON">Badminton</option>
-                  <option value="BASKET">Basket</option>
-                  <option value="TENNIS">Tenis</option>
-                  <option value="MINI_SOCCER">Mini soccer</option>
-                </select>
-              </div>
-              <div className="field">
-                <label>Lokasi</label>
-                <input name="location" placeholder="Jakarta, BSD, Bekasi" />
-              </div>
-              <div className="field">
-                <label>Tanggal</label>
-                <input name="date" type="date" />
-              </div>
-              <button className="btn" type="submit"><Search size={18} /> Cari</button>
-            </form>
-            <div className="hero-stats">
-              <div><strong>{venues.length}</strong><span>Venue aktif</span></div>
-              <div><strong>7 hari</strong><span>Availability</span></div>
-              <div><strong>Midtrans</strong><span>Satu pintu bayar</span></div>
+              <Link className="btn glass" href="/bookings">Cek Booking <ArrowRight size={18} /></Link>
             </div>
           </div>
-          <div className="hero-photo">
-            <img src="https://images.unsplash.com/photo-1556056504-5c7696c4c28d?auto=format&fit=crop&w=1200&q=80" alt="Pemain olahraga di lapangan" />
-            <div className="hero-card">
-              <div>
-                <strong>{featuredVenue?.name || "Arena Senayan"}</strong>
-                <span className="card-meta"><MapPin size={15} /> {featuredVenue?.location || "Gelora, Jakarta Pusat"}</span>
-                {minPrice > 0 && <span className="muted">Mulai {formatRupiah(minPrice)}/jam</span>}
-              </div>
-              <Link className="btn secondary" href={featuredVenue ? `/venues/${featuredVenue.slug}` : "/venues"}>Lihat slot</Link>
+          <form className="hero-search-bar" action="/venues">
+            <div className="field">
+              <label>Olahraga</label>
+              <select name="sport" defaultValue="">
+                <option value="">Semua olahraga</option>
+                <option value="FUTSAL">Futsal</option>
+                <option value="BADMINTON">Badminton</option>
+                <option value="BASKET">Basket</option>
+                <option value="TENNIS">Tenis</option>
+                <option value="MINI_SOCCER">Mini soccer</option>
+              </select>
+            </div>
+            <div className="field">
+              <label>Lokasi</label>
+              <input name="location" placeholder="Jakarta, BSD, Bekasi" />
+            </div>
+            <div className="field">
+              <label>Tanggal</label>
+              <input name="date" type="date" />
+            </div>
+            <button className="btn" type="submit"><Search size={18} /> Cari</button>
+          </form>
+          <div className="hero-proof">
+            <div><strong>{venues.length}</strong><span>Venue aktif</span></div>
+            <div><strong>7 hari</strong><span>Cek availability</span></div>
+            <div><strong>Midtrans</strong><span>Satu pintu bayar</span></div>
+            <div>
+              <strong>{featuredVenue?.name || "Arena Senayan"}</strong>
+              <span><MapPin size={14} /> {featuredVenue?.location || "Gelora, Jakarta Pusat"} {minPrice > 0 ? `mulai ${formatRupiah(minPrice)}/jam` : ""}</span>
             </div>
           </div>
         </div>
