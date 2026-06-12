@@ -49,7 +49,9 @@ export async function POST(request: NextRequest) {
         transactionId: payload.transaction_id,
         transactionStatus: payload.transaction_status
       });
-      return NextResponse.json({ message: "Payment tidak ditemukan" }, { status: 404, headers: { "x-request-id": context.requestId } });
+      // Midtrans expects 200 for verified notifications even when the order is
+      // unknown (e.g. dashboard test notifications); non-200 triggers retries.
+      return NextResponse.json({ received: true, ignored: true }, { headers: { "x-request-id": context.requestId } });
     }
 
     const status = mapGatewayStatus(payload.transaction_status, payload.fraud_status);
