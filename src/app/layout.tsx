@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Dumbbell } from "lucide-react";
+import { Inter } from "next/font/google";
+import { NavBar } from "@/components/NavBar";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter"
+});
 
 export const metadata: Metadata = {
   title: "CourtBook",
@@ -10,23 +15,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id">
+    <html lang="id" className={inter.variable}>
       <body>
-        <nav className="nav">
-          <div className="shell nav-inner">
-            <Link className="brand" href="/">
-              <span className="brand-mark"><Dumbbell size={18} /></span>
-              CourtBook
-            </Link>
-            <div className="nav-links">
-              <Link href="/venues">Venue</Link>
-              <Link href="/bookings">Riwayat</Link>
-              <Link href="/admin">Admin</Link>
-              <Link href="/login">Login</Link>
-              <Link href="/venues" className="btn secondary">Cari Lapangan</Link>
-            </div>
-          </div>
-        </nav>
+        <NavBar />
         {children}
       </body>
     </html>

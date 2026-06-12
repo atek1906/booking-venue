@@ -97,7 +97,7 @@ export default async function HomePage() {
         <div className="shell feature-grid">
           {features.map(({ title, copy, Icon }) => (
             <div className="panel stack" key={title}>
-              <Icon size={28} color="#0f766e" />
+              <span className="inline-grid size-12 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><Icon size={24} /></span>
               <h3 style={{ margin: 0 }}>{title}</h3>
               <p className="muted" style={{ margin: 0 }}>{copy}</p>
             </div>

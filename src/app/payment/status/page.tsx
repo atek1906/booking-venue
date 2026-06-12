@@ -97,6 +97,7 @@ function PaymentStatusContent() {
 
   const booking = data?.booking;
   const payment = data?.payment;
+  const isPaid = payment?.status === "paid" || booking?.status === "confirmed";
 
   return (
     <main className="section">
@@ -115,9 +116,13 @@ function PaymentStatusContent() {
               <div className="row"><span>Total</span><strong>{formatRupiah(booking.total)}</strong></div>
               {payment?.provider === "midtrans" ? (
                 <>
-                  <p className="notice muted"><Clock size={18} /> Selesaikan pembayaran di Midtrans. Status booking berubah otomatis setelah webhook tervalidasi.</p>
+                  {isPaid ? (
+                    <p className="notice"><CheckCircle2 size={18} className="shrink-0 text-emerald-700" /> Pembayaran diterima. Booking kamu sudah terkonfirmasi — tunjukkan QR booking saat datang ke venue.</p>
+                  ) : (
+                    <p className="notice muted"><Clock size={18} className="shrink-0" /> Selesaikan pembayaran di Midtrans. Status booking berubah otomatis setelah webhook tervalidasi.</p>
+                  )}
                   <div className="chips">
-                    {payment.invoiceUrl && <a className="btn" href={payment.invoiceUrl}><ExternalLink size={18} /> Bayar di Midtrans</a>}
+                    {!isPaid && payment.invoiceUrl && <a className="btn" href={payment.invoiceUrl}><ExternalLink size={18} /> Bayar di Midtrans</a>}
                     {booking.status !== "confirmed" && (
                       <button className="btn secondary" disabled={syncing} onClick={() => syncFromMidtrans()}>
                         <RefreshCw size={18} /> {syncing ? "Sync..." : "Sync dari Midtrans"}
