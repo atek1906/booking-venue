@@ -20,7 +20,9 @@ export function verifyMidtransSignature(payload: {
   signature_key?: string;
 }) {
   const serverKey = process.env.MIDTRANS_SERVER_KEY;
-  if (!serverKey) return process.env.PAYMENT_GATEWAY !== "midtrans";
+  if (!serverKey) {
+    return process.env.PAYMENT_GATEWAY === "mock" && process.env.NODE_ENV !== "production";
+  }
   const source = `${payload.order_id}${payload.status_code}${payload.gross_amount}${serverKey}`;
   const expected = crypto.createHash("sha512").update(source).digest("hex");
   return expected === payload.signature_key;

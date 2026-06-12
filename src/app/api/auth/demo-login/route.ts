@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     response.cookies.set(DEMO_SESSION_COOKIE, createDemoSessionCookie(email), {
       httpOnly: true,
       sameSite: "lax",
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7,
       path: "/"
     });
