@@ -117,7 +117,7 @@ function PaymentStatusContent() {
               {payment?.provider === "midtrans" ? (
                 <>
                   {isPaid ? (
-                    <p className="notice"><CheckCircle2 size={18} className="shrink-0 text-emerald-700" /> Pembayaran diterima. Booking kamu sudah terkonfirmasi — tunjukkan QR booking saat datang ke venue.</p>
+                    <p className="notice"><CheckCircle2 size={18} className="shrink-0 text-forest-700" /> Pembayaran diterima. Booking kamu sudah terkonfirmasi — tunjukkan QR booking saat datang ke venue.</p>
                   ) : (
                     <p className="notice muted"><Clock size={18} className="shrink-0" /> Selesaikan pembayaran di Midtrans. Status booking berubah otomatis setelah webhook tervalidasi.</p>
                   )}
