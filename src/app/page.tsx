@@ -32,7 +32,7 @@ export default async function HomePage() {
   return (
     <main>
       <section className="home-hero">
-        <img className="home-hero-bg" src="https://images.unsplash.com/photo-1556056504-5c7696c4c28d?auto=format&fit=crop&w=1800&q=82" alt="Pemain olahraga di lapangan" />
+        <img className="home-hero-bg" src="https://images.unsplash.com/photo-1459865264687-595d652de67e?auto=format&fit=crop&w=1800&q=80" alt="Rumput lapangan hijau dengan garis putih" />
         <div className="home-hero-shade" />
         <div className="shell home-hero-content">
           <div className="home-copy">

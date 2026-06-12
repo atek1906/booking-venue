@@ -28,10 +28,10 @@ const venueSeeds = [
     facilities: ["Parkir", "Ruang ganti", "Shower", "Mushola", "Kantin", "Wi-Fi"],
     rules: ["Check-in maksimal 15 menit sebelum jadwal", "Gunakan sepatu olahraga sesuai permukaan", "Refund mengikuti kebijakan venue"],
     photos: [
-      "https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1547347298-4074fc3086f0?auto=format&fit=crop&w=1200&q=80"
+      "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?auto=format&fit=crop&w=1200&q=80"
     ],
     opensAt: "06:00",
     closesAt: "23:00",
@@ -51,9 +51,9 @@ const venueSeeds = [
     facilities: ["Lounge", "Pro shop", "Coach on request", "Parkir", "Locker"],
     rules: ["Dilarang membawa makanan ke area court", "Reschedule maksimal H-1 jika slot tersedia"],
     photos: [
+      "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1599474924187-334a4ae5bd3c?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1613918108466-292b78a8ef95?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1530915365347-e35b749a0381?auto=format&fit=crop&w=1200&q=80"
     ],
     opensAt: "07:00",
@@ -73,9 +73,9 @@ const venueSeeds = [
     facilities: ["Tribun", "Lampu malam", "Ruang bilas", "Parkir bus kecil"],
     rules: ["Maksimal 16 pemain per sesi", "Dilarang menggunakan sepatu pull besi"],
     photos: [
-      "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80",
-      "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&w=1200&q=80",
       "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?auto=format&fit=crop&w=1200&q=80"
     ],
     opensAt: "08:00",
